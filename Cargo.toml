@@ -1,0 +1,5 @@
+[package]
+
+name = "uri"
+version = "0.0.1"
+authors = ["Mike Dilger <mike@mikedilger.com>"]

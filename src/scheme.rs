@@ -34,7 +34,16 @@ macro_rules! def_schemes {
             fn from_str(s: &str) -> Result<Scheme, ()> {
                 let scheme = match s.to_ascii_lowercase().as_slice() {
                     $($str => Scheme::$id),+,
-                    _ => return Err(())
+                    _ => {
+                        // First verify valid character set
+                        for c in s.chars() {
+                            match c {
+                                'a'...'z' | 'A'...'Z' | '0'...'9' | '+' | '-' | '.' => (),
+                                _ => return Err(()),
+                            }
+                        }
+                        Scheme::Unknown(s.to_string())
+                    }
                 };
                 Ok(scheme)
             }

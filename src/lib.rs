@@ -2,20 +2,22 @@
 pub mod scheme;
 use scheme::Scheme;
 
-// FIXME: define a richer Query type
-type Query = String;
-
-type Fragment = String;
-
 #[allow(dead_code)]
-pub struct URI<S: SchemeData> {
+/// A data representation for a Uri.  The type S is the scheme data, which may
+/// be a String in cases where there is no scheme parser available.
+pub struct Uri<S> {
     scheme: Scheme,
     scheme_data: S,
-    query: Option<Query>,
-    fragment: Option<Fragment>,
 }
 
-
-pub trait SchemeData {
-    fn parser(data: String) -> Self;
+/*
+impl Uri<S> {
+    pub fn parser(data: &str) -> Option<Uri<S>> {
+        for c in data {
+            match c {
+                'a'...'z' | 'A'...'Z' | '0'...'9' | '+' | '-' | '.' => (),
+            }
+        }
+    }
 }
+*/

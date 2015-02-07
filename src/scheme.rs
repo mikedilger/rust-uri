@@ -9,20 +9,22 @@ pub enum SchemeStatus {
     Permanent,
     Provisional,
     Historical,
-    Unregistered
+    Unregistered,
 }
 
 macro_rules! def_schemes {
     ($($id:ident, $str:expr, $desc:expr, $refr:expr, $status:ident);+) => (
-        #[derive(PartialEq, Eq, Clone, Copy, Debug)]
+        #[derive(PartialEq, Eq, Clone, Debug)]
         pub enum Scheme {
-            $($id,)+
+            $($id),+,
+            Unknown(String)
         }
 
         impl Display for Scheme {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 match *self {
-                    $(Scheme::$id => write!(f, "{}", $str)),+
+                    $(Scheme::$id => write!(f, "{}", $str)),+,
+                    Scheme::Unknown(ref s) => write!(f, "{}", s.to_ascii_lowercase())
                 }
             }
         }
@@ -41,19 +43,22 @@ macro_rules! def_schemes {
         impl Scheme {
             pub fn iana_status(&self) -> SchemeStatus {
                 match *self {
-                    $(Scheme::$id => SchemeStatus::$status),+
+                    $(Scheme::$id => SchemeStatus::$status),+,
+                    Scheme::Unknown(_) => return SchemeStatus::Unregistered
                 }
             }
 
             pub fn description<'a>(&'a self) -> &'a str {
                 match *self {
-                    $(Scheme::$id => $desc),+
+                    $(Scheme::$id => $desc),+,
+                    Scheme::Unknown(_) => return ""
                 }
             }
 
             pub fn iana_reference<'a>(&'a self) -> &'a str {
                 match *self {
-                    $(Scheme::$id => $refr),+
+                    $(Scheme::$id => $refr),+,
+                    Scheme::Unknown(_) => return ""
                 }
             }
         }

@@ -7,8 +7,7 @@ use std::str::FromStr;
 pub mod scheme;
 
 #[allow(dead_code)]
-/// A data representation for a Uri.  The type S is the scheme data, which may
-/// be a String in cases where there is no scheme parser available.
+/// A data representation for a Uri
 pub struct Uri {
     scheme: Scheme,
     scheme_data: String,
@@ -22,8 +21,13 @@ pub enum UriParseError {
 
 impl Uri {
 
-    pub fn parse(data: &str) -> Result<Uri, UriParseError> {
+    // Fixme:  don't presume UTF-8 encoding:
+    // pub fn parse(data: &[u8], encoding: ???) -> Result<Uri, UriParseError> {
+    //   First map to utf8 encoding
+    //   then do as current code
 
+    /// Parse an &str into a Uri, presuming UTF-8 encoding
+    pub fn parse(data: &str) -> Result<Uri, UriParseError> {
         let (scheme_str, scheme_data_str) = match data.find(':') {
             Some(i) => (&data[..i], &data[i+1..]),
             None => return Err(UriParseError::MissingSchemeTerminator),

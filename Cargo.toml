@@ -3,3 +3,8 @@
 name = "uri"
 version = "0.0.1"
 authors = ["Mike Dilger <mike@mikedilger.com>"]
+description = "URI parsing and formation library"
+repository = "https://github.com/mikedilger/rust-uri"
+readme = "README.md"
+keywords = [ "uri", "url", "urn" ]
+license = "MIT"

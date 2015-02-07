@@ -7,6 +7,7 @@ type Query = String;
 
 type Fragment = String;
 
+#[allow(dead_code)]
 pub struct URI<S: SchemeData> {
     scheme: Scheme,
     scheme_data: S,

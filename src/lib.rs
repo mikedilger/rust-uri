@@ -1,6 +1,11 @@
 
 #![feature(core)]
 
+extern crate encoding;
+
+use std::string::CowString;
+
+use encoding::{Encoding,DecoderTrap};
 use scheme::Scheme;
 use std::str::FromStr;
 
@@ -13,25 +18,42 @@ pub struct Uri {
     scheme_data: String,
 }
 
-#[derive(PartialEq,Eq,Clone,Copy,Debug)]
+#[derive(PartialEq,Eq,Clone,Debug)]
 pub enum UriParseError {
     BadSchemeCharacter,
     MissingSchemeTerminator,
+    UnknownEncoding,
+    EncodingError(CowString<'static>)
 }
 
 impl Uri {
 
-    // Fixme:  don't presume UTF-8 encoding:
-    // pub fn parse(data: &[u8], encoding: ???) -> Result<Uri, UriParseError> {
-    //   First map to utf8 encoding
-    //   then do as current code
+    /// Parse bytes in any known encoding into a Uri
+    pub fn parse_encoded(data: &[u8], encoding_whatwg_label: &str) -> Result<Uri, UriParseError> {
 
-    /// Parse an &str into a Uri, presuming UTF-8 encoding
+        // Get encoding from label
+        let enc = match ::encoding::label::encoding_from_whatwg_label(encoding_whatwg_label) {
+            Some(e) => e,
+            None => return Err(UriParseError::UnknownEncoding),
+        };
+
+        // Decode input byte sequence
+        let decoded = match enc.decode(data, DecoderTrap::Strict) {
+            Ok(s) => s,
+            Err(e) => return Err(UriParseError::EncodingError(e)),
+        };
+
+        Uri::parse(decoded.as_slice())
+    }
+
+    /// Parse a UTF-8 encoded &str into a Uri
     pub fn parse(data: &str) -> Result<Uri, UriParseError> {
+
         let (scheme_str, scheme_data_str) = match data.find(':') {
             Some(i) => (&data[..i], &data[i+1..]),
             None => return Err(UriParseError::MissingSchemeTerminator),
         };
+
         let scheme: Scheme = match FromStr::from_str(scheme_str) {
             Ok(s) => s,
             Err(_) => return Err(UriParseError::BadSchemeCharacter),
@@ -52,6 +74,9 @@ fn test_scheme_parsing() {
     let uri = Uri::parse("crazy://idea").unwrap();
     assert!(uri.scheme == Scheme::Unknown("crazy".to_string()));
 
+    let uri =  Uri::parse("https://правительство.рф").unwrap();
+    assert!(uri.scheme == Scheme::Https);
+
     match Uri::parse("in/valid://url") {
         Ok(_) => panic!("Invalid URI has parsed!"),
         Err(e) => assert!(e == UriParseError::BadSchemeCharacter),
@@ -61,4 +86,14 @@ fn test_scheme_parsing() {
         Ok(_) => panic!("Incomplete URI has parsed!"),
         Err(e) => assert!(e == UriParseError::MissingSchemeTerminator),
     };
+}
+
+#[test]
+fn test_parse_encoded() {
+    let input: Vec<u8> = vec![104, 116, 116, 112, 115, 58, 47, 47, 223,
+                              224, 208, 210, 216, 226, 213, 219, 236,
+                              225, 226, 210, 222, 46, 224, 228];
+    let uri = Uri::parse_encoded(input.as_slice(), "cyrillic").unwrap();
+    assert!(uri.scheme == Scheme::Https);
+    assert!(uri.scheme_data == "//правительство.рф");
 }

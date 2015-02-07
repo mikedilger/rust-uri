@@ -8,3 +8,6 @@ repository = "https://github.com/mikedilger/rust-uri"
 readme = "README.md"
 keywords = [ "uri", "url", "urn" ]
 license = "MIT"
+
+[dependencies]
+encoding = "0.2"
